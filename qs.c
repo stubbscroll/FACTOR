@@ -3,6 +3,7 @@
 #include <string.h>
 #include <math.h>
 #include <gmp.h>
+#include <sys/time.h>
 
 /* quadratic sieve!
    this is a basic version without anything */
@@ -15,6 +16,12 @@
    http://codes-sources.commentcamarche.net/source/25981-self-initializing-quadratic-sieve
    http://www.alpertron.com.ar/ECM.HTM
 */
+
+double gettime() {
+  struct timeval t;
+  gettimeofday(&t,NULL);
+  return t.tv_sec+t.tv_usec/1000000.;
+}
 
 #define MAXP 100000000
 typedef long long ll;
@@ -176,9 +183,9 @@ void QSgenfactorbase() {
 	if(!(qs.a=malloc(sizeof(int)*qs.fn))) puts("out of memory"),exit(1);
 	if(!(qs.lg=malloc(sizeof(int)*qs.fn))) puts("out of memory"),exit(1);
 	if(!(qs.rel=malloc(sizeof(mpz_t)*(qs.fn+EXTRAREL)))) puts("out of memory"),exit(1);
-	for(i=0;i<qs.fn;i++) mpz_init(qs.rel[i]);
-	if(!(qs.m=malloc(sizeof(unsigned long long *)*(qs.fn+EXTRAREL)))) puts("out of memory"),exit(1);
-	for(i=0;i<qs.fn+EXTRAREL;i++) if(!(qs.m[i]=calloc(((qs.fn+EXTRAREL+63)/64),sizeof(unsigned long long)))) puts("out of memory"),exit(1);
+	for(i=0;i<qs.fn+EXTRAREL;i++) mpz_init(qs.rel[i]);
+	if(!(qs.m=malloc(sizeof(unsigned long long *)*(qs.fn)))) puts("out of memory"),exit(1);
+	for(i=0;i<qs.fn;i++) if(!(qs.m[i]=calloc(((qs.fn+EXTRAREL+63)/64),sizeof(unsigned long long)))) puts("out of memory"),exit(1);
 	qs.fn=0;
 	qs.p[qs.fn++]=-1;
 	for(i=0;i<primes && prime[i]<qs.B;i++) {
@@ -429,6 +436,7 @@ int QSroot(mpz_t a) {
 	free(v);
 	free(freevar);
 	free(qs.ev);
+	mpz_clear(x); mpz_clear(y);
 	return r;
 }
 
@@ -446,33 +454,38 @@ int QS(mpz_t n,mpz_t a) {
 	r=QSroot(a);
 	for(i=0;i<qs.rn;i++) mpz_clear(qs.rel[i]);
 	free(qs.p); free(qs.a); free(qs.lg); free(qs.rel);
-	for(i=0;i<qs.rn;i++) free(qs.m[i]);
+	for(i=0;i<qs.fn;i++) free(qs.m[i]);
 	free(qs.m);
 	mpz_clear(qs.n);
 	return r;
 }
 
-void try(mpz_t n) {
-	mpz_t a;
-	mpz_init(a);
-	if(QS(n,a)) {
-		gmp_printf("factor %Zd\n",a);
-		goto end;
-	}
+void try(char *s) {
+	double start,end;
+	mpz_t n,a;
+	mpz_init_set_str(n,s,10); mpz_init(a);
+	gmp_printf("%Zd (%d):\n",n,strlen(s));
+	start=gettime();
+	if(QS(n,a)) goto done;
 	puts("no factor found");
-end:
-	mpz_clear(a);
+	goto fail;
+done:
+	end=gettime()-start;
+	if(end<0) end=0;
+	gmp_printf("  %.3f s, found %Zd (%c) * ",end,a,mpz_probab_prime_p(a,200)?'P':'C');
+	mpz_fdiv_q(a,n,a);
+	gmp_printf("(%c)\n",mpz_probab_prime_p(a,200)?'P':'C');
+fail:
+	mpz_clear(n); mpz_clear(a);
 }
 
 int main() {
 	mpz_t n;
+	char s[1000];
+	mpz_init(n);
 	createsieve();
 	genprimes();
-	mpz_init(n);
-	mpz_set_str(n,"174224571863520493293247799005065324265471",10);
-	try(n);
-	mpz_set_str(n,"216564934649977779183332104119550719684705171673087005634079598195092857334543",10);
-	try(n);
+	while(scanf("%999s",s)==1) try(s);
 	mpz_clear(n);
 	return 0;
 }
