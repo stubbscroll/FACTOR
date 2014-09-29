@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <gmp.h>
 #include <sys/time.h>
 
@@ -59,11 +60,11 @@ done:
 	mpz_clear(x2); mpz_clear(product); mpz_clear(temp); mpz_clear(g);
 }
 
-void try(mpz_t n) {
+void try(char *s) {
 	double start,end;
-	mpz_t a;
-	mpz_init(a);
-	gmp_printf("%Zd:\n",n);
+	mpz_t n,a;
+	mpz_init_set_str(n,s,10); mpz_init(a);
+	gmp_printf("%Zd (%d):\n",n,strlen(s));
 	start=gettime();
 	pollardrho(n,a);
 	end=gettime()-start;
@@ -71,17 +72,14 @@ void try(mpz_t n) {
 	gmp_printf("  %.3f s, found %Zd (%c) * ",end,a,mpz_probab_prime_p(a,200)?'P':'C');
 	mpz_fdiv_q(a,n,a);
 	gmp_printf("(%c)\n",mpz_probab_prime_p(a,200)?'P':'C');
-	mpz_clear(a);
+	mpz_clear(n); mpz_clear(a);
 }
 
 int main() {
 	mpz_t n;
 	char s[1000];
 	mpz_init(n);
-	while(scanf("%999s",s)==1) {
-		mpz_set_str(n,s,10);
-		try(n);
-	}
+	while(scanf("%999s",s)==1) try(s);
 	mpz_clear(n);
 	return 0;
 }
