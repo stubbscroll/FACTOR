@@ -3,9 +3,16 @@
 #include <string.h>
 #include <math.h>
 #include <gmp.h>
+#include <sys/time.h>
 
 /* ECM from "prime numbers - a computational perspective" (crandall, pomerance) */
 /* sample factorizations in main take 469 seconds */
+
+double gettime() {
+  struct timeval t;
+  gettimeofday(&t,NULL);
+  return t.tv_sec+t.tv_usec/1000000.;
+}
 
 gmp_randstate_t gmprand;
 
@@ -96,7 +103,7 @@ int ECM(mpz_t n,mpz_t out,int B1,int maxc) {
 	mpz_init_set(ecm.n,n); mpz_init(ecm.C);
 	mpz_init(ecm.U); mpz_init(ecm.V); mpz_init(ecm.T); mpz_init(ecm.W);
 	mpz_init(ecm.t); mpz_init(ecm.t1); mpz_init(ecm.t2); mpz_init(ecm.t3);
-	gmp_printf("ecm %Zd B1 %d maxc %d d %d\n",n,B1,maxc,D);
+	gmp_printf("  ecm B1=%d curves=%d\n",B1,maxc);
 	while(maxc--) {
 		/* choose random curve */
 		do {
@@ -165,9 +172,12 @@ end:
 }
 #undef D
 
-void try(mpz_t n) {
-	mpz_t a;
-	mpz_init(a);
+void try(char *s) {
+	double start,end;
+	mpz_t n,a;
+	mpz_init_set_str(n,s,10); mpz_init(a);
+	gmp_printf("%Zd (%d):\n",n,strlen(s));
+	start=gettime();
 	if(ECM(n,a,2000,25)) goto done;
 	if(ECM(n,a,11000,90)) goto done;
 	if(ECM(n,a,50000,300)) goto done;
@@ -176,43 +186,23 @@ void try(mpz_t n) {
 	puts("no factor found");
 	goto fail;
 done:
-	gmp_printf("found factor %Zd\n",a);
+	end=gettime()-start;
+	if(end<0) end=0;
+	gmp_printf("  %.3f s, found %Zd (%c) * ",end,a,mpz_probab_prime_p(a,200)?'P':'C');
+	mpz_fdiv_q(a,n,a);
+	gmp_printf("(%c)\n",mpz_probab_prime_p(a,200)?'P':'C');
 fail:
-	mpz_clear(a);
+	mpz_clear(n); mpz_clear(a);
 }
 
 int main() {
 	mpz_t n;
+	char s[1000];
+	mpz_init(n);
 	gmp_randinit_mt(gmprand);
 	createsieve();
 	genprimes();
-	mpz_init(n);
-	mpz_set_str(n,"189029013605764030727921585951",10);
-	try(n);
-	mpz_set_str(n,"74520163184103070906530082210517",10);
-	try(n);
-	mpz_set_str(n,"523221436353855391814506581063557",10);
-	try(n);
-	mpz_set_str(n,"1564875138070655023123959837084599",10);
-	try(n);
-	mpz_set_str(n,"78325683705012095897299536068804821",10);
-	try(n);
-	mpz_set_str(n,"228264844518616987380835399399539853",10);
-	try(n);
-	mpz_set_str(n,"7511663247147032357037656316584448877",10);
-	try(n);
-	mpz_set_str(n,"25348924873403921164412907702279733193",10);
-	try(n);
-	mpz_set_str(n,"208105107011856763735887399456439331987",10);
-	try(n);
-	mpz_set_str(n,"3565260354721980199129400248402571306803",10);
-	try(n);
-/*	mpz_set_str(n,"32160137412888834732051225949878741400809992284289",10);
-	try(n);
-	mpz_set_str(n,"160967735740568108627966290684899321608893044314961348169843",10);
-	try(n);
-	mpz_set_str(n,"216564934649977779183332104119550719684705171673087005634079598195092857334543",10);
-	try(n);*/
+	while(scanf("%999s",s)==1) try(s);
 	mpz_clear(n);
 	return 0;
 }
