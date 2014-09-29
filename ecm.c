@@ -1,11 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <gmp.h>
-
-gmp_randstate_t gmprand;
+#include <sys/time.h>
 
 /* ECM from "factorization and primality testing" (david m bressoud) */
 /* sample factorizations in main take 1634 seconds */
+
+double gettime() {
+  struct timeval t;
+  gettimeofday(&t,NULL);
+  return t.tv_sec+t.tv_usec/1000000.;
+}
+
+gmp_randstate_t gmprand;
 
 void sub_2i(mpz_t r,mpz_t s,mpz_t n,mpz_t a,mpz_t b,mpz_t X2,mpz_t Z2) {
 	mpz_t t,u,v;
@@ -70,7 +78,7 @@ int ECM(mpz_t n,mpz_t out,int maxb,int maxc) {
 	int r=0,p;
 	mpz_t X,Y,Z,a,b,g,t;
 	mpz_init(X); mpz_init(Y); mpz_init(Z); mpz_init(a); mpz_init(b); mpz_init(g); mpz_init(t);
-	gmp_printf("start ecm on %Zd with b1 %d curves %d\n",n,maxb,maxc);
+	gmp_printf("  ecm B1=%d curves=%d\n",maxb,maxc);
 	while(maxc--) {
 	newcurve:
 		/* pick random curve */
@@ -78,7 +86,6 @@ int ECM(mpz_t n,mpz_t out,int maxb,int maxc) {
 		/* determine b=(y^2-x^3-ax)%n */
 		mpz_mul(b,Y,Y); mpz_powm_ui(t,X,3,n); mpz_sub(b,b,t);
 		mpz_mul(t,a,X); mpz_sub(b,b,t); mpz_mod(b,b,n);
-//		gmp_printf("curve a %Zd\n      b %Zd\n      x %Zd\n      y %Zd\n",a,b,X,Y);
 		/* check gcd(4a^3+27b^2,n) */
 		mpz_powm_ui(g,a,3,n); mpz_mul_si(g,g,4); mpz_mul(t,b,b);
 		mpz_mul_si(t,t,27); mpz_add(g,g,t); mpz_gcd(g,g,n);
@@ -116,55 +123,41 @@ end:
 	return r;
 }
 
-void try(mpz_t n) {
-	mpz_t a;
-	mpz_init(a);
+void try(char *s) {
+	double start,end;
+	mpz_t n,a;
+	mpz_init_set_str(n,s,10); mpz_init(a);
+	gmp_printf("%Zd (%d):\n",n,strlen(s));
+	start=gettime();
 	if(ECM(n,a,2000,25)) goto done;
 	if(ECM(n,a,11000,90)) goto done;
 	if(ECM(n,a,50000,300)) goto done;
 	if(ECM(n,a,250000,700)) goto done;
 	if(ECM(n,a,1000000,1800)) goto done;
+	if(ECM(n,a,3000000,5100)) goto done;
+	if(ECM(n,a,11000000,10600)) goto done;
+	if(ECM(n,a,43000000,19300)) goto done;
+	if(ECM(n,a,110000000,49000)) goto done;
+	if(ECM(n,a,260000000,124000)) goto done;
+	if(ECM(n,a,850000000,210000)) goto done;
 	puts("no factor found");
 	goto fail;
 done:
-	gmp_printf("found factor %Zd\n",a);
+	end=gettime()-start;
+	if(end<0) end=0;
+	gmp_printf("  %.3f s, found %Zd (%c) * ",end,a,mpz_probab_prime_p(a,200)?'P':'C');
+	mpz_fdiv_q(a,n,a);
+	gmp_printf("(%c)\n",mpz_probab_prime_p(a,200)?'P':'C');
 fail:
-	mpz_clear(a);
+	mpz_clear(n); mpz_clear(a);
 }
-
-
 
 int main() {
 	mpz_t n;
-	gmp_randinit_mt(gmprand);
+	char s[1000];
 	mpz_init(n);
-	mpz_set_str(n,"189029013605764030727921585951",10);
-	try(n);
-	mpz_set_str(n,"74520163184103070906530082210517",10);
-	try(n);
-	mpz_set_str(n,"523221436353855391814506581063557",10);
-	try(n);
-	mpz_set_str(n,"1564875138070655023123959837084599",10);
-	try(n);
-	mpz_set_str(n,"78325683705012095897299536068804821",10);
-	try(n);
-	mpz_set_str(n,"228264844518616987380835399399539853",10);
-	try(n);
-	mpz_set_str(n,"7511663247147032357037656316584448877",10);
-	try(n);
-	mpz_set_str(n,"25348924873403921164412907702279733193",10);
-	try(n);
-	mpz_set_str(n,"208105107011856763735887399456439331987",10);
-	try(n);
-	mpz_set_str(n,"3565260354721980199129400248402571306803",10);
-	try(n);
-/*	mpz_set_str(n,"32160137412888834732051225949878741400809992284289",10);
-	try(n);
-	mpz_set_str(n,"160967735740568108627966290684899321608893044314961348169843",10);
-	try(n);
-	mpz_set_str(n,"216564934649977779183332104119550719684705171673087005634079598195092857334543",10);
-	try(n);
-*/
+	gmp_randinit_mt(gmprand);
+	while(scanf("%999s",s)==1) try(s);
 	mpz_clear(n);
 	return 0;
 }

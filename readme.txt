@@ -6,13 +6,15 @@ ecm.c            basic ECM implemented from "factorization and primality
                  testing" by bressoud.
 ecm2.c           improved ECM implemented from "prime numbers - a computational
                  perspective" by crandall, pomerance (algorithm 7.4.4). around 3x
-                 faster than ecm.3, but around 1.5x slower than alpertron.
+                 faster than ecm.c, but around 1.5x slower than alpertron
+                 (measured on a very small set of numbers).
 qs.c             basic quadratic sieve, the only improvement is negative numbers.
                  using polynomial x^2-n and gaussian elimination with dense
                  matrix.
 
 in.txt           file with large composites, some have more than 2 prime
-                 factors. all numbers are factors of mersenne numbers.
+                 factors. all numbers are factors of mersenne numbers. none
+                 of the numbers have prime factors less than 1 million.
 
 improvements of quadratic sieve will come later. i want to add large primes,
 multiple polynomials, self-initialization and better linear algebra (block
