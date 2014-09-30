@@ -20,3 +20,5 @@ improvements of quadratic sieve will come later. i want to add large primes,
 multiple polynomials, self-initialization and better linear algebra (block
 lanczos or block wiedemann). number field sieve will probably not be added
 here, check https://github.com/stubbscroll/nfs instead.
+
+usage: run program and enter number(s) to factorize to stdin

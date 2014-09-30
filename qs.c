@@ -11,6 +11,9 @@
    http://mersennewiki.org/index.php/Self-Initializing_Quadratic_Sieve
    "prime numbers - a computational perspective" (crandall, pomerance)
 
+   at 60 digits the linear algebra starts to take a significant amount of time,
+   add block lanczos or block wiedemann...
+
    code examples: (implementation of siqs)
    http://gforge.inria.fr/projects/ecm/
    http://codes-sources.commentcamarche.net/source/25981-self-initializing-quadratic-sieve
@@ -108,9 +111,6 @@ end:
 /* cache block, experiment with this */
 #define BLOCKSIZE 30000
 /* slack in logarithm for trial division */
-/* 13 is good for 42 digits, 1.5% of trial divisions are non-smooth, but misses
-   some smooth numbers */
-#define LGSLACK 13
 
 /* global variables for quadratic sieve */
 struct {
@@ -126,15 +126,17 @@ struct {
 	short sieve[BLOCKSIZE]; /* the sieve */
 	mpz_t *rel;             /* smooth numbers */
 	int rn;                 /* number of smooth numbers */
+	int LGSLACK;            /* lg slack to accept for trial division */
 	/* matrix */
 	unsigned long long **m;
 	/* final assembly */
 	int *ev;                /* cumulative exponent vector */
 } qs;
 
-#define SETBIT(a,b) qs.m[(a)][(b)>>6]|=(1ULL<<(b&63))
-#define XORBIT(a,b) qs.m[(a)][(b)>>6]^=(1ULL<<(b&63))
-#define ISSET(a,b) (qs.m[(a)][(b)>>6]&(1ULL<<(b&63)))
+#define SETBIT(a,b) qs.m[(a)][(b)>>6]|=(1ULL<<((b)&63))
+#define CLRBIT(a,b) qs.m[(a)][(b)>>6]&=~(1ULL<<((b)&63))
+#define XORBIT(a,b) qs.m[(a)][(b)>>6]^=(1ULL<<((b)&63))
+#define ISSET(a,b) (qs.m[(a)][(b)>>6]&(1ULL<<((b)&63)))
 
 /* gaussian elimination mod 2 on bitmasks, A is n*m, b is n*o */
 /* a is a malloced array of pointers, each a[i] is of size
@@ -174,7 +176,7 @@ void QSgenfactorbase() {
 	mpz_init(t);
 	qs.fn=0;
 	/* generate factor base! p must be a quadratic residue of n */
-	for(qs.fn=1,i=0;i<primes && prime[i]<qs.B;i++) {
+	for(qs.fn=2,i=1;i<primes && prime[i]<qs.B;i++) {
 		mpz_set_ui(t,prime[i]);
 		if(mpz_jacobi(qs.n,t)>0) qs.fn++;
 	}
@@ -188,7 +190,8 @@ void QSgenfactorbase() {
 	for(i=0;i<qs.fn;i++) if(!(qs.m[i]=calloc(((qs.fn+EXTRAREL+63)/64),sizeof(unsigned long long)))) puts("out of memory"),exit(1);
 	qs.fn=0;
 	qs.p[qs.fn++]=-1;
-	for(i=0;i<primes && prime[i]<qs.B;i++) {
+	qs.p[qs.fn++]=2;
+	for(i=1;i<primes && prime[i]<qs.B;i++) {
 		mpz_set_ui(t,prime[i]);
 		if(mpz_jacobi(qs.n,t)>0) {
 			qs.p[qs.fn]=prime[i];
@@ -198,24 +201,25 @@ void QSgenfactorbase() {
 			qs.fn++;
 		}
 	}
-	printf("factor base bound %d primes %d\n",qs.B,qs.fn);
+	printf("  factor base bound %d primes %d\n",qs.B,qs.fn);
 	mpz_clear(t);
 }
 
 int correct,false,sieves;
 
-void QStrialdiv(mpz_t start) {
+/* dir: 1 if positive x^2-n, -1 if negative */
+void QStrialdiv(mpz_t start,int dir) {
 	mpz_t t,t1,t2;
 	int lim,i,j,lo,hi,mid,k;
 	mpz_init_set(t,start); mpz_init(t1); mpz_init(t2);
-	/* find center value in interval, t=start+BLOCKSIZE/2 */
-	mpz_add_ui(t,t,BLOCKSIZE/2);
+	/* find lowest value in interval */
+	if(dir<0) mpz_add_ui(t,t,BLOCKSIZE-1);
 	/* take lg(t^2-n) */
 	mpz_mul(t,t,t);
 	mpz_sub(t,t,qs.n);
 	mpz_abs(t,t);
 	lim=0.5+log(mpz_get_d(t))/log(2);
-	for(i=0;i<BLOCKSIZE;i++) if(qs.sieve[i]>=lim-LGSLACK) {
+	for(i=0;i<BLOCKSIZE;i++) if(qs.sieve[i]>=lim-qs.LGSLACK) {
 		mpz_set(t,start);
 		mpz_add_ui(t,t,i);
 		mpz_mul(t,t,t);
@@ -240,13 +244,15 @@ void QStrialdiv(mpz_t start) {
 		}
 		if(mpz_cmp_ui(t,1)>0 && mpz_cmp_ui(t,qs.p[qs.fn-1])<0) {
 			/* find index of remaining factor in list */
-			lo=j+1; hi=qs.fn; k=mpz_get_ui(t);
+			lo=j; hi=qs.fn; k=mpz_get_ui(t);
 			while(lo<hi) {
 				mid=lo+(hi-lo)/2;
 				if(qs.p[mid]<k) lo=mid+1;
 				else hi=mid;
 			}
+			if(k!=qs.p[lo]) printf("sanity error, remainder %d found %d\n",k,qs.p[lo]);
 			/* put factor in exponent vector */
+			if(lo<0 || lo>=qs.fn) printf("lo %d out of bounds\n",lo);
 			XORBIT(lo,qs.rn);
 			mpz_set_ui(t,1);
 		}
@@ -255,16 +261,20 @@ void QStrialdiv(mpz_t start) {
 			mpz_add_ui(qs.rel[qs.rn],qs.rel[qs.rn],i);
 			qs.rn++;
 			correct++;
-		//gmp_printf("add smooth %Zd %d/%d sieve-lg %d lim %d\n",t2,qs.rn,qs.fn+EXTRAREL,qs.sieve[i],lim);
+//			gmp_printf("add smooth %Zd %d/%d sieve-lg %d lim %d\n",t2,qs.rn,qs.fn+EXTRAREL,qs.sieve[i],lim);
+		} else {
+			/* factorization failed, clear vector */
+			for(j=0;j<qs.fn;j++) CLRBIT(j,qs.rn);
+			false++;
 		}
-		else false++;
 		if(qs.rn==qs.fn+EXTRAREL) break;
 	}
 	mpz_clear(t); mpz_clear(t1); mpz_clear(t2);
 }
 
-/* TODO possible improvements: calculate pfrontm from pfrontp (same wich
-   pback) and eliminate the 2 m-arrays */
+/* TODO possible improvements: calculate pfrontm from pfrontp (same with
+   pback) and eliminate the 2 m-arrays and trade memory access for
+   calculation */
 void QSsieve() {
 	int *pfrontp,*pfrontm,*pbackp,*pbackm;
 	int i;
@@ -293,6 +303,7 @@ void QSsieve() {
 	}
 	/* sieve! */
 	correct=false=sieves=0;
+	printf("  ");
 	do {
 		/* forward */
 		for(i=0;i<BLOCKSIZE;i++) qs.sieve[i]=0;
@@ -309,9 +320,10 @@ void QSsieve() {
 			pfrontm[i]-=BLOCKSIZE;
 		}
 		/* find smooth numbers (positive) */
-		if(qs.rn<qs.fn+EXTRAREL) QStrialdiv(xfront);
+		if(qs.rn<qs.fn+EXTRAREL) QStrialdiv(xfront,1);
 		mpz_add_ui(xfront,xfront,BLOCKSIZE);
 		/* backward */
+		if(mpz_cmp_ui(xback,0)<0) continue;
 		for(i=0;i<BLOCKSIZE;i++) qs.sieve[i]=0;
 		i=1;
 		if(qs.p[i]==2) {
@@ -326,10 +338,10 @@ void QSsieve() {
 			while(pbackm[i]>=0) qs.sieve[pbackm[i]]+=qs.lg[i],pbackm[i]-=qs.p[i];
 		}
 		/* find smooth numbers (negative) */
-		if(qs.rn<qs.fn+EXTRAREL) QStrialdiv(xback);
+		if(qs.rn<qs.fn+EXTRAREL) QStrialdiv(xback,-1);
 		mpz_sub_ui(xback,xback,BLOCKSIZE);
 		sieves++;
-		if(sieves%1000==0) printf("[%d] ",qs.rn);
+		if(sieves%20000==0) printf("[%d] ",qs.rn);
 	} while(qs.rn<qs.fn+EXTRAREL);
 	printf("%d rel %d fail trial division %d sieve blocks\n",correct,false,sieves);
 	free(pfrontp); free(pfrontm); free(pbackp); free(pbackm);
@@ -362,12 +374,13 @@ void QSbuildev(mpz_t x) {
 	}
 	if(mpz_cmp_ui(t,1)>0 && mpz_cmp_ui(t,qs.p[qs.fn-1])<0) {
 		/* find index of remaining factor in list */
-		lo=i+1; hi=qs.fn; k=mpz_get_ui(t);
+		lo=i; hi=qs.fn; k=mpz_get_ui(t);
 		while(lo<hi) {
 			mid=lo+(hi-lo)/2;
 			if(qs.p[mid]<k) lo=mid+1;
 			else hi=mid;
 		}
+		if(k!=qs.p[lo]) printf("sanity error, remainder %d found %d\n",k,qs.p[lo]);
 		mpz_set_ui(t,1);
 		qs.ev[lo]++;
 	}
@@ -380,7 +393,7 @@ void QSbuildev(mpz_t x) {
 
 /* examine each solution vector and try to get factor */
 int QSroot(mpz_t a) {
-	int i,j,k,r=0,f;
+	int i,j,k,r=0,f,tried=0;
 	char *freevar,*v;
 	mpz_t x,y;
 	mpz_init(x); mpz_init(y);
@@ -397,6 +410,7 @@ int QSroot(mpz_t a) {
 		}
 	}
 	for(f=0;f<qs.fn;f++) if(freevar[f]) {
+		tried++;
 		/* set free variable i to 1 and the others to 0 */
 		for(i=0;i<qs.rn;i++) v[i]=i==f;
 		/* solution vector by back-substitution! set the first 1-element to
@@ -422,13 +436,12 @@ int QSroot(mpz_t a) {
 			mpz_mul_si(y,y,qs.p[i]);
 			mpz_mod(y,y,qs.n);
 		}
-		gmp_printf("free var %d:\n  x = %Zd\n  y = %Zd\n",f,x,y);
 		/* get factor */
 		mpz_sub(x,x,y);
 		mpz_gcd(x,x,qs.n);
-		gmp_printf("  gcd %Zd\n",x);
 		if(mpz_cmp_ui(x,1)>0 && mpz_cmp(x,qs.n)<0) {
 			mpz_set(a,x);
+			printf("  found factor after %d nullvectors\n",tried);
 			r=1;
 			break;
 		}
@@ -441,12 +454,16 @@ int QSroot(mpz_t a) {
 }
 
 /* quadratic sieve! */
-/* warning, don't invoke on even numbers or powers */
+/* warning, don't invoke on even numbers or powers, or on very small numbers */
 int QS(mpz_t n,mpz_t a) {
 	double L=mpz_get_d(n);
-	int r,i;
+	int r,i,d=mpz_sizeinbase(n,10);;
 	/* the multiplier is tweakable! */
 	qs.B=(int)exp(0.5*sqrt(log(L)*log(log(L))))*1.9;
+	/* TODO tweak, but it seems 13 is good for 33-57 digits, at least.
+	   maybe increase with 1 for each 6-8 digits, with 33 digits => 13 */
+	qs.LGSLACK=13;
+	if(d>=33) qs.LGSLACK+=(d-33)/7;
 	mpz_init_set(qs.n,n);
 	QSgenfactorbase();
 	QSsieve();
