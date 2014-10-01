@@ -133,6 +133,7 @@ struct {
 	int *ev;                /* cumulative exponent vector */
 } qs;
 
+#define SETBITVAL(a,b,v) qs.m[(a)][(b)>>6]=(qs.m[(a)][(b)>>6]&~(1ULL<<((b)&63)))|((v>0)<<((b)&63))
 #define SETBIT(a,b) qs.m[(a)][(b)>>6]|=(1ULL<<((b)&63))
 #define CLRBIT(a,b) qs.m[(a)][(b)>>6]&=~(1ULL<<((b)&63))
 #define XORBIT(a,b) qs.m[(a)][(b)>>6]^=(1ULL<<((b)&63))
@@ -397,7 +398,7 @@ int QSroot(mpz_t a) {
 	char *freevar,*v;
 	mpz_t x,y;
 	mpz_init(x); mpz_init(y);
-	if(!(qs.ev=malloc(sizeof(int)*qs.rn))) puts("out of memory"),exit(1);
+	if(!(qs.ev=malloc(sizeof(int)*qs.fn))) puts("out of memory"),exit(1);
 	/* find all free variables. variable i is free if there is no row having
 	   its first 1-element in column i */
 	if(!(freevar=malloc(qs.rn))) puts("out of memory"),exit(1);
@@ -409,7 +410,7 @@ int QSroot(mpz_t a) {
 			break;
 		}
 	}
-	for(f=0;f<qs.fn;f++) if(freevar[f]) {
+	for(f=0;f<qs.rn;f++) if(freevar[f]) {
 		tried++;
 		/* set free variable i to 1 and the others to 0 */
 		for(i=0;i<qs.rn;i++) v[i]=i==f;
@@ -426,13 +427,13 @@ int QSroot(mpz_t a) {
 		mpz_set_ui(x,1);
 		for(i=0;i<qs.rn;i++) if(v[i]) mpz_mul(x,x,qs.rel[i]),mpz_mod(x,x,qs.n);
 		/* take square root of right side, the product of (x^2-n) */
-		for(i=0;i<qs.rn;i++) qs.ev[i]=0;
+		for(i=0;i<qs.fn;i++) qs.ev[i]=0;
 		/* we didn't want to spend lots of memory storing the factorization of
 		   each x^2-n, so trial divide again */
 		for(i=0;i<qs.rn;i++) if(v[i]) QSbuildev(qs.rel[i]);
 		mpz_set_ui(y,1);
 		/* multiply half the exponents */
-		for(i=0;i<qs.rn;i++) for(j=0;j<qs.ev[i];j+=2) {
+		for(i=0;i<qs.fn;i++) for(j=0;j<qs.ev[i];j+=2) {
 			mpz_mul_si(y,y,qs.p[i]);
 			mpz_mod(y,y,qs.n);
 		}
@@ -486,7 +487,8 @@ void try(char *s) {
 	gmp_printf("%Zd (%d):\n",n,strlen(s));
 	start=gettime();
 	if(QS(n,a)) goto done;
-	puts("no factor found");
+	end=gettime()-start;
+	printf("  %.3f s no factor found\n",end);
 	goto fail;
 done:
 	end=gettime()-start;
