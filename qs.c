@@ -457,11 +457,13 @@ int QSroot(mpz_t a) {
 /* warning, don't invoke on even numbers or powers, or on very small numbers */
 int QS(mpz_t n,mpz_t a) {
 	double L=mpz_get_d(n);
-	int r,i,d=mpz_sizeinbase(n,10);;
+	int r,i,d=mpz_sizeinbase(n,10);
 	/* the multiplier is tweakable! */
-	qs.B=(int)exp(0.5*sqrt(log(L)*log(log(L))))*1.9;
-	/* TODO tweak, but it seems 13 is good for 33-57 digits, at least.
-	   maybe increase with 1 for each 6-8 digits, with 33 digits => 13 */
+	qs.B=(int)exp(0.5*sqrt(log(L)*log(log(L))));
+	if(d<=50) qs.B*=1.4;
+	else if(d>=68) qs.B*=0.9;
+	else qs.B*=1.4-((d-50)/18*0.5);
+	/* the following formula of LGSLACK found by experimentation */
 	qs.LGSLACK=13;
 	if(d>=33) qs.LGSLACK+=(d-33)/7;
 	mpz_init_set(qs.n,n);
