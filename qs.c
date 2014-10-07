@@ -191,7 +191,7 @@ void QSgenfactorbase() {
 	for(i=0;i<qs.fn;i++) if(!(qs.m[i]=calloc(((qs.fn+EXTRAREL+63)/64),sizeof(unsigned long long)))) puts("out of memory"),exit(1);
 	qs.fn=0;
 	qs.p[qs.fn++]=-1;
-	qs.p[qs.fn++]=2;
+	qs.p[qs.fn]=2; qs.lg[qs.fn]=1; qs.a[qs.fn++]=1;
 	for(i=1;i<primes && prime[i]<qs.B;i++) {
 		mpz_set_ui(t,prime[i]);
 		if(mpz_jacobi(qs.n,t)>0) {
@@ -342,7 +342,7 @@ void QSsieve() {
 		if(qs.rn<qs.fn+EXTRAREL) QStrialdiv(xback,-1);
 		mpz_sub_ui(xback,xback,BLOCKSIZE);
 		sieves++;
-		if(sieves%20000==0) printf("[%d] ",qs.rn);
+		if(sieves%1000000==0) printf("[%d] ",qs.rn);
 	} while(qs.rn<qs.fn+EXTRAREL);
 	printf("%d rel %d fail trial division %d sieve blocks\n",correct,false,sieves);
 	free(pfrontp); free(pfrontm); free(pbackp); free(pbackm);
