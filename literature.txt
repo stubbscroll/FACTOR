@@ -1,0 +1,44 @@
+Here be a list of literature relevant for integer factorization.
+
+===============================================================================
+MATHEMATICAL BACKGROUND
+
+
+===============================================================================
+GENERAL
+
+
+===============================================================================
+ECM
+===============================================================================
+QS
+===============================================================================
+SNFS (Special number field sieve)
+===============================================================================
+SNFS-results
+
+A kilobit special number field sieve factorization (Aoki, Franke, Kleinjung,
+Lenstra, Osvik, 2007)
+
+Description of how 2^1039-1 was factored. Also includes a description of the
+Block Wiedemann algorithm for the matrix step.
+===============================================================================
+NFS ([General] number field sieve)
+
+A beginner's guide to the general number field sieve (Michael Case, 2003)
+
+A brief and simple explanation of the number field sieve that avoids hairy
+details and proofs. Some knowledge about rings is beneficial for a better
+understanding. Explains all steps of GNS except the algebraic square root,
+and gives helpful implementation details. Contains a small example.
+
+===============================================================================
+LINEAR ALGEBRA
+
+A Block Lanczos algorithm for finding dependencies over GF(2) (Peter L
+Montgomery, 1995)
+
+Describes an algorithm for solving a linear system of equations modulo 2,
+which is an improvement over the Lanczos algorithm that utilizes bitwise
+operations on whole words. Very difficult to read, and I can't comment on
+its implementation-friendliness yet.
