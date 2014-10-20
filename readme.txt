@@ -19,11 +19,8 @@ in.txt           file with large composites, some have more than 2 prime
 improvements of quadratic sieve will come later. i want to add large primes,
 two large primes, multiple polynomials, self-initialization and better linear
 algebra (block lanczos or block wiedemann or structured gaussian elimination).
-number field sieve will probably not be added here, as i probably won't factor
-numbers above the crossover point where nfs beats qs. check
+number field sieve will probably not be added here, as i probably won't be able
+to factor numbers above the crossover point where nfs beats qs. check
 https://github.com/stubbscroll/nfs instead.
-
-check out if the "null space algorithm" [knuth vol 2 page 444] is useful
-for something.
 
 usage: run program and enter number(s) to factorize to stdin

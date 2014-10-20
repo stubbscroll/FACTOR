@@ -1,0 +1,22 @@
+improvements to consider
+
+ECM
+
+alpertron's implementation has a lot of montgomery multiplication stuff in it,
+investigate
+
+QS
+
+sieve around floor(sqrt(n)), then sieve around floor(sqrt(2n)) etc for
+increasing kn
+
+filtering: remove duplicate relations and if a prime occurs once, remove the
+relation containing it. if a prime occurs in two relations, merge them. if a
+prime occurs in 3 relations, they can be merged into 2 relations.
+
+LINEAR ALGEBRA
+
+check out if the "null space algorithm" [knuth vol 2 page 444] is useful
+for something.
+
+implement the algorithm from Raghavendra
