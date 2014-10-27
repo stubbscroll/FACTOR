@@ -8,9 +8,9 @@
 /* sample factorizations in main take 1634 seconds */
 
 double gettime() {
-  struct timeval t;
-  gettimeofday(&t,NULL);
-  return t.tv_sec+t.tv_usec/1000000.;
+	struct timeval t;
+	gettimeofday(&t,NULL);
+	return t.tv_sec+t.tv_usec/1000000.;
 }
 
 gmp_randstate_t gmprand;

@@ -17,9 +17,9 @@
 */
 
 double gettime() {
-  struct timeval t;
-  gettimeofday(&t,NULL);
-  return t.tv_sec+t.tv_usec/1000000.;
+	struct timeval t;
+	gettimeofday(&t,NULL);
+	return t.tv_sec+t.tv_usec/1000000.;
 }
 
 #define MAXP 100000000
@@ -193,7 +193,7 @@ int QSgenfactorbase() {
 		j=mpz_jacobi(qs.n,t);
 		/* in the exceedingly rare event that the prime divides n: return it */
 		if(!j) return prime[i];
-		if(mpz_jacobi(qs.n,t)>0) {
+		if(j>0) {
 			qs.p[qs.fn]=prime[i];
 			/* find square root a = n (mod p) */
 			qs.a[qs.fn]=sqrtmod(mpz_fdiv_ui(qs.n,prime[i]),prime[i]);
@@ -251,9 +251,7 @@ void QStrialdiv(mpz_t start,int dir) {
 				if(qs.p[mid]<k) lo=mid+1;
 				else hi=mid;
 			}
-			if(k!=qs.p[lo]) {
-				printf("sanity error, remainder %d found %d\n",k,qs.p[lo]);
-			}
+			if(k!=qs.p[lo]) printf("sanity error, remainder %d found %d\n",k,qs.p[lo]);
 			/* put factor in exponent vector */
 			if(lo<0 || lo>=qs.fn) printf("lo %d out of bounds\n",lo);
 			XORBIT(lo,qs.rn);
