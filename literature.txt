@@ -1,9 +1,59 @@
-Here be a list of relevant literature for integer factorization, with a brief
-commentary.
+the gigantic literature list for integer factorization, with my annotations
+
+TODO obtain:
+The joy of factoring (Samuel Wagstaff, 2013)
+
+TODO get paywalled articles:
+Factorization using the quadratic sieve algorithm (Davis, Holdridge, 1984)
+Factoring numbers using singular integers (Adleman, 1991)
+Theorems on factorization and primality testing (Pollard, 1974)
 
 
 ===============================================================================
 MATHEMATICAL BACKGROUND
+-------------------------------------------------------------------------------
+A course in computational algebraic number theory (Henri Cohen, 1993)
+
+A really, *really* comprehensive book containing a ton of algorithms in
+algebraic number theory and related fields. Many of the sub-algorithms used in
+the more involved factorization routines are given here, with implementation-
+friendly pseudocode. Examples of useful algorithms for factorization include
+modular square roots, Euclid's algorithm for polynomials, factorization of
+polynomials over Z, Q and finite fields and find roots of polynomials over
+finite fields. There is an introduction to elliptic curves. Most factorization
+algorithms are described, such as rho, p-1, class group method, SQUFOF, CFRAC,
+ECM, QS, MPQS and SNFS. A short section on how to generalize SNFS is given,
+and an algorithm for finding an algebraic square root is given, which looks
+like the inefficient "brute force method". An even shorter section with
+improvements to NFS is also included.
+-------------------------------------------------------------------------------
+The art of computer programming, volume 2 seminumerical algorithms (Donald
+Knuth, 3rd edition, 1998)
+
+Chapter 4 contains low-level algorithms that are very useful in most factoring
+algorithms. These include basic arithmetic including arbitrary precision,
+modular arithmetic, Euclid's algorithm, polynomial arithmetic, factorization
+and primality testing. In addition, there is an extreme amount of analysis.
+For a math-heavy book, there are a lot of implementation tips given.
+Factorization algorithms mentioned are trial division, Pollard rho, Fermat's
+method, "factoring with sieves" (a faster variant of Fermat's method that uses
+a sieve, and further speedup is even exemplified using MIX assembly) and CFRAC
+(early abort strategy is mentioned). Dixon's random squares algorithm is 
+briefly mentioned in a rigorous upper bound time complexity proof. The p-1
+algorithm is mentioned in an exercise (with solution). The existence of QS, ECM
+and NFS are mentioned, but the description of these are out of scope for the
+book.
+-------------------------------------------------------------------------------
+Algebraic number theory and Fermat's last theorem (Stewart, Tall, 3rd ed, 2002)
+
+Chapter 2 describes algebraic numbers (Z or Q adjoined with the root of an
+irreducible polynomial) and defines number fields, chapter 4 talks about
+factorization of elements in number rings and number fields into irreducibles
+and primes, and chapter 5 does the same for ideals, and shows that there are
+certain rings where factorization of ideals into prime ideals is unique, even
+when the elements themselves don't exhibit unique factorization. This is pretty
+much required mathematical background for fully understanding NFS. The text is
+pretty accessible and contains numerous examples.
 -------------------------------------------------------------------------------
 Learning algebraic number theory (Sam Ruth, 2010)
 
@@ -18,12 +68,51 @@ everything that comes after 3.1 can be skipped).
 ===============================================================================
 GENERAL
 -------------------------------------------------------------------------------
+Factorization and primality tests (John D Dixon, 1984)
+
+A rather theoretical and math-heavy survey about factorization and primality
+testing. Describes trial division, various methods for integers of special
+form, pollard rho, using group structure to find factors (example: p-1) and
+CFRAC. A proof of the  runtime of dixon's random squares algorithm. QS and
+SQUFOF are mentioned but not described.
+-------------------------------------------------------------------------------
 On the complexity of computing discrete logarithms and factoring integers
 (A M Odlyzko, around 1985?)
 
 Discussion of the time complexity of various factorization algorithms, based
 on the complexity of solving the matrix step. It's written before NFS came
 along, and probably also before the blocked variants of Lanczos and Wiedemann.
+-------------------------------------------------------------------------------
+Factorization and primality testing (David M Bressoud, 1989) [book]
+
+A book that dives straight into factorization and primality testing without
+providing too much mathematical background beforehand, so basic number theory
+seems like a prerequisite. However, the description of the algorithms are
+pretty easy to follow, and very implementation-friendly (even though the
+pseudocode is written in a rather old-fashioned way). Algorithms described
+include trial division, Fermat's algorithm, Kraitchik's improvement (looking
+for congruances of squares instead of regular squares), Pollard rho, Pollard
+p-1, Dixon's random squares, QS, CFRAC and ECM. The QS description is beginner-
+friendly and it's not too difficult to implement QS with this book as the only
+aid. Complete pseudocode is not given, but the description is sufficient. The
+matrix has an identity matrix appended to the right, which is more instructive,
+but not the most efficient way to build the matrix. Some improvements are
+mentioned briefly: large prime variation and multiple polynomials. For ECM,
+complete implementation-friendly pseudocode is given, for the basic variant
+that uses the Weierstrass representation with no stage 2 (large prime). The
+Montgomery representation variant is developed in the exercises (without
+solutions). For Pollard rho, complete pseudocode with Brent's improvements is
+given.
+-------------------------------------------------------------------------------
+Factoring by electronic mail (A Lenstra, Manasse, 1990)
+
+Description of an approach that uses spare cycles on internet volunteer's
+computers to collectively factor large integers, communicating by email. The
+approach first uses ECM to try to find small factors, and if one computer finds
+a factor, this is communicated to all other computers so that they can stop
+working on the same integer. Then, MPQS is used, and each computer sends
+relations to a central storage. A very brief description of ECM and a bit more
+detailed description of MPQS follows.
 -------------------------------------------------------------------------------
 Massively distributed computing and factoring large integers (Robert D
 Silverman, 1991) ["pracnique"]
@@ -32,6 +121,18 @@ Overview of factoring algorithms aimed at a slightly more general scientific
 audience, so the usage of math is more gentle than the factorization literature
 in general. Contains a bit of general history relevant to factorization. Pretty
 much ever major factorization algorithm is mentioned.
+-------------------------------------------------------------------------------
+Algorithms for factoring integers (Buchmann, Müller)
+
+Desctiption of most factorization algorithms, starting with the historical ones
+(trial division and Fermat's factoring method), and continuing with the
+modern methods (CFRAC, QS, SNFS), and ending with Pollard rho, p-1, ECM and
+quadratic forms/class group. Most of the algorithms are analyzed with regard
+to runtime. Some subalgorithms are described, such as finding square roots
+modulo p. The large prime variation and multiple polynomial variation of QS
+are mentioned. Detailed descriptions of methods that solve large sparse linear
+systems (structured Gaussian elimination, conjugate gradient and Wiedemann, of
+which Wiedemann seems to be the most complicated by far of those).
 -------------------------------------------------------------------------------
 A survey of modern integer factorization algorithms (Peter L Montgomery, 1994)
 
@@ -44,9 +145,9 @@ observation, which is rather uncommon.
 -------------------------------------------------------------------------------
 A tale of two sieves (Carl Pomerance, 1996)
 
-A "popular scientific"-ish article about the history of CFRAC, QS and NFS. An
-easy-ish read, and some potentially scary math enters in the NFS explanation.
-No implementation details.
+An article about the history of CFRAC, QS and NFS. An easy-ish read, and some
+potentially scary math enters in the NFS explanation. No implementation
+details.
 -------------------------------------------------------------------------------
 Some parallel algorithms for integer factorisation (Richard P Brent, 1999)
 
@@ -67,6 +168,26 @@ Dixon's random squares rather than CFRAC), quadratic sieve (QS) and number
 field sieve (NFS)). There is run-time analysis for each algorithm. The
 descriptions of ECM and NFS omit a lot of the math and the advanced
 subalgorithms, but there is still a high-level description of lattice sieving.
+-------------------------------------------------------------------------------
+Cryptography: an introduction (Nigel Smart, 3rd ed, 2003) [book]
+
+A book about cryptography that also contain bits about integer factorization.
+The book begins with mathematical background, some of which are relevant for
+factorization, like modular arithmetic and elliptic curves. In particular,
+the binary Euclid's algorithm and algorithm for finding modular square roots
+are given. Factorization algorithms covered are trial division, Pollard's p-1,
+"linear sieve" (just to demonstrate sieving to find smooth numbers and serves
+as an introduction to NFS) and NFS. The introduction to NFS is unusually
+short and at the same time complete in a sense, while avoiding the scariest
+math (the description of the algebraic square root is on a very high level).
+Another unusual aspect of the description is that both polynomials define
+a number field, rather than outright defining one of them as "rational". There
+is a short and simple example of a factorization where the number field is
+a UFD which simplifies stuff. A nifty feature about this book is that items
+that are coloured red in the text are secrets and items in blue are public
+information. For example, in RSA, the encryption exponent e and the product of
+primes n would be blue, while the decryption exponent d, phi(n) and the prime
+factors of n, p and q, would be red.
 -------------------------------------------------------------------------------
 Integer factorization (Per Leslie Jensen, 2005) [master's thesis]
 
@@ -95,6 +216,40 @@ the ring of algebraic integers O_Q(theta). In addition there is a
 section describing Shor's polynomial time quantum computer factorization
 algorithm. There are runtime analyses for each algorithm. There are some
 typos in examples.
+-------------------------------------------------------------------------------
+Prime numbers: a computational perspective (Crandall, Pomerance, 2nd ed, 2005)
+[book]
+
+An extremely comprehensive book on factorization and primality testing, which
+pretty much can be considered the best single reference for the moment.
+Chapter 2 contains some number theory basics, and some necessary algorithms
+are given here, such as modular square root. Chapter 5 contains descriptions of
+exponential factorization algorithms: Fermat's method, "Lehman method", Pollard
+rho (the existence of Brent's improvements are mentioned, but not described),
+p-1 method and binary quadratic form factorization. Chapter 6 describes
+subexponential algorithms like QS (improvements mentioned: faster matrix
+methods, one and two large prime variations, multiple polynomials and
+self-initialization), "special quadratic sieve" for numbers of a special
+form, SNFS and NFS. The NFS section is very math-heavy and the description
+is pretty much complete, although pseudocode and implementation details are not
+given for each step. Chapter 7 describes ECM and contains very implementation-
+friendly pseudocode for an inversionless ECM version with the Montgomery
+curve representation and an optimized stage 2. Chapter 9 is a great section on
+large-integer arithmetic. The book is significantly more math-heavy and a bit
+harder to implement from than, say, Bressoud's book, but this book also covers
+much more.
+-------------------------------------------------------------------------------
+Cryptography: theory and practice (Douglas R Stinson, 3rd ed, 2006) [book]
+
+A cryptography book, and we are only concerned with the chapter on RSA which
+also includes integer factorization. The coverage begins with basic number
+theory such as Euclid's algorithm (including the extended variant that can find
+multiplicative inverses), Chinese remainder theorem, some group theory and
+a description of the RSA cryptosystem. Then follows coverage of primality
+tests. The following factoring algorithms are described: Pollard p-1 (without
+mention of step 2, but a mention of the existence of ECM which is a
+generalization of p-1), Pollard rho, Dixon's random squares. QS and NFS are
+mentioned, but not described.
 
 
 ===============================================================================
@@ -121,16 +276,150 @@ task.
 
 
 ===============================================================================
+GENERAL-results
+-------------------------------------------------------------------------------
+Some miscellaneous factorizations (John Brillhart, 1963)
+
+Some new factors of Mersenne, Fibonacci and Fermat numbers are presented.
+Primality of the factors were established using trial division and a Fermat-
+like theorem by Lehmer. The factorization algorithm used is not specified.
+
+
+===============================================================================
+OTHER
+-------------------------------------------------------------------------------
+Some factorizations of 2^n+-1 and related results (Brillhart, Selfridge, 1967)
+
+Tables of factorizations of numbers of the form specified in the title, and
+descriptions of how they were obtained (the actual methods are not described).
+-------------------------------------------------------------------------------
+A new kind of cipher that would take millions of years to break (Martin
+Gardner, 1977)
+
+A light introduction to Diffie-Hellman key exchange (without the mathematical
+details) and RSA (with some details), and a cipher challenge given by MIT
+where the RSA key is a 129-digit integer, which is stated to be a product of a
+64-digit prime and a 65-digit prime. It is claimed that with the best
+algorithms and the best computers of the time, it would take 40 quadrillion
+years to break the cipher.
+-------------------------------------------------------------------------------
+Factorizations of b^n+-1, b = 2, 3, 5, 6, 7, 10, 11, 12 up to higher powers
+(Brillhart, Lehmer, Selfridge, Tuckerman, Wagstaff, 3rd ed, 2001)
+
+Very detailed history on how the numbers of this form were factored in the past
+(from hand calculation to mechanical devices to computers) and in modern times
+aided by the developments in factorization and primality testing. The rest of
+the book contains tables of factorizations of numbers of the form specified in
+the table.
+
+
+===============================================================================
+TRIAL DIVISION
+-------------------------------------------------------------------------------
+Analysis of a simple factorization algorithm (Knuth, Pardo, 1976)
+
+Analysis of the trial division algorithm which, given an integer n, divides it
+by 2, 3, 4, 5, ... and casts out each factor as they are discovered; the
+algorithm terminates when the trial divisor exceeds the square root of the
+remaining unfactored part. After an extremely detailed analysis involving the
+size of the kth largest prime factor, the result is that the number of trial
+divisions is less than n^0.35 half of the time.
+
+
+===============================================================================
 POLLARD RHO
+-------------------------------------------------------------------------------
+A Monte Carlo method for factorization (J M Pollard, 1975)
+
+The original paper describing Pollard's rho method. 
+
+
+===============================================================================
+POLLARD RHO-improvements
 -------------------------------------------------------------------------------
 An improved Monte Carlo factorization algorithm (Richard P Brent, 1980)
 
 Describes Brent's improvements to Pollard's Rho algorithm with a faster
 cycle-finding algorithm and fewer gcd computations.
+-------------------------------------------------------------------------------
+Factorization of the eighth Fermat number (Brent, Pollard, 1981)
+
+A conjectured improvement to Pollard's rho algorithm when p=1 (mod m), by using
+polynomials of the form x^m+c, reducing the number of steps by a factor of
+sqrt(m-1). The new algorithm was tested on several Fermat numbers, and it
+managed to factor F_8.
+
+
+===============================================================================
+P-1 method
+-------------------------------------------------------------------------------
+Theorems on factorization and primality testing (Pollard, 1974)
+
+TODO (I think this is the original article describing the P-1 method.)
+
+
+===============================================================================
+P+1 method
+-------------------------------------------------------------------------------
+A p+1 method of factoring (H C Williams, 1982)
+
+The original article describing the p+1 method, which is efficient at finding
+prime factors p such that p+1 has small prime factors only. The algorithm is
+based on Lucas functions, but it is mentioned that the finite field F_p^2
+can also be used. The steps of the algorithm is described in a rather math-
+intensive way.
 
 
 ===============================================================================
 ECM (Lenstra's elliptic curve factorization method)
+-------------------------------------------------------------------------------
+Some integer factorization algorithms using elliptic curves (Richard Brent,
+1985)
+
+Description of a way to speed up ECM by adding a second stage that generates
+a bunch of random points on the curve and hopes to find a "birthday paradox"
+match. Various other improvements are suggested. Benchmarks with different
+versions of ECM plus Pollard rho are presented, and optimal parameters for ECM
+are suggested.
+
+
+-------------------------------------------------------------------------------
+Factoring integers with elliptic curves (H W Lenstra Jr, 1987)
+
+Description of ECM, a factorization method derived from Pollard's p-1 method,
+where the multiplicative group is replaced by the group of points on a random
+elliptic curve. Major improvement to p-1: if we fail to find a factor, we can
+try another random curve. There is a long math-intensive section describing
+elliptic curves, before the algorithm is explained in a similarly math-
+intensive way.
+-------------------------------------------------------------------------------
+Factor: an integer factorization program for the IBM PC (Richard P Brent, 1989)
+
+Description of a program "factor" that factors integers of the form a^n+-1, as
+well as maintaining a database of factors of integers of the same form. The
+program first tries inexpensive methods as trial division, gcd with possible
+Aurifeuillian factors, probabilistic primality testing before finally ECM is
+run (only the first stage is implemented because of the large memory
+requirements of the second stage).
+-------------------------------------------------------------------------------
+A practical analysis of the elliptic curve factoring algorithm (Silverman,
+Wagstaff, 1993)
+
+Detailed analysis of the runtime of variant of ECM with large prime, and
+suggested optimal parameter settings based on this analysis. ECM and MPQS are
+analyzed together, and a suggested procedure using both ECM and MPQS to factor
+a general N is given that minimizes the total expected time (that is, how long
+should ECM be run before switching to MPQS?).
+-------------------------------------------------------------------------------
+20 years of ECM (Paul Zimmermann, 2006)
+
+Very detailed description of the current state-of-the-art version of the ECM
+algorithm, with a high focus on fast implementation.
+-------------------------------------------------------------------------------
+The elliptic curve method for factoring (Paul Zimmermann, 2010)
+
+Very brief article that describes ECM at a high level, and mentions the
+current improvements, with references to them.
 
 
 ===============================================================================
@@ -148,11 +437,73 @@ no inversions as long as the necessary precalculation is performed.
 
 
 ===============================================================================
+CFRAC (continued fraction factorization method)
+
+This algorithm is made obsolete by QS, but the following documents can have
+historical interest.
+-------------------------------------------------------------------------------
+On factoring large numbers (Lehmer, Powers, 1931)
+
+Two slightly different methods (both based on continued fractions) for
+factoring integers are presented.
+-------------------------------------------------------------------------------
+A method of factoring and the factorization of F_7 (Morrison, Brillhart, 1975)
+
+Description of the CFRAC method with pseudocode. The algorithm tries to find
+smooth numbers, of which a square is found using linear algebra. The identity
+matrix is appended to the right of the matrix to readily find the set of
+smooth numbers that, when multiplied, is square. This algorithm was used to
+factor the seventh Fermat number.
+-------------------------------------------------------------------------------
+Implementation of the continued fraction integer factoring algorithm
+(Pomerance, Wagstaff, 1983)
+
+Description of CFRAC including the large prime variation, early abort strategy,
+pre-multiplying the number to factor with a small constant, and a couple of
+untested new ideas are mentioned. The description has a large focus on
+implementation, and many tricks are mentioned. Some example factorizations are
+shown.
+
+
+===============================================================================
+CFRAC-results
+-------------------------------------------------------------------------------
+The factorization of F_7 (Morrison, Brillhart, 1970)
+
+Report on the factorization of the 2^2^7+1, the 7th Fermat number. The article
+is not much longer than this description.
+
+
+===============================================================================
 QS (quadratic sieve)
+-------------------------------------------------------------------------------
+Factoring large numbers with a quadratic sieve (Joseph L Gerver, 1983)
+
+Very brief description of the algorithm, starting with Fermat's congruence of
+squares and ending with more QS details. A rather detailed description of the
+implementation, followed by a very detailed runtime comparison between QS and
+CFRAC and CFEA (CFRAC with early abort).
+-------------------------------------------------------------------------------
+The quadratic sieve factoring algorithm (Carl Pomerance, 1985)
+
+First, various other algorithms that finds congruences, factors them and tries
+to assemble a congruence of squares are introduced. These include Kraitchik's
+scheme, CFRAC and Schröppel's linear sieve (which avoids trial division, but
+has a more expensive linear algebra step). Finally, QS is explained. Several
+improvements are suggested such as sieving over arithmetic progressions which
+have p as a divisor, another multiple polynomial variant which looks like the
+origins of MPQS, large prime variation, dropping of small moduli because they
+take the most time and contribute the least to the sum of logs in the sieve,
+and multiplying the integer to be factored by a small constant which changes
+the factor base (an optimization criterium is given).
 -------------------------------------------------------------------------------
 The multiple polynomial quadratic sieve (Robert D Silverman, 1987)
 
-
+Improved version of the quadratic sieve which uses multiple polynomials. With
+this approach, smaller sieve intervals are used for each polynomial, resulting
+in better yield and much less work in the sieve stage. A method for selecting
+the polynomials is given, and complete pseudocode for the improved QS is also
+given.
 -------------------------------------------------------------------------------
 Factoring with two large primes (A Lenstra, Manasse, 1994)
 
@@ -160,7 +511,8 @@ Description of a QS variant that uses two large primes, and how to combine
 partial relations (1 large prime) and partial-partial relations (2 large
 primes) into full relations. rich on implementation tips, including very
 detailed description of the relation combination stage, which uses cycle
-detection in a graph created from the partial(-partial) relations.
+detection in a graph created from the partial(-partial) relations. Suggested
+parameters for a selected range of number of digits are given.
 -------------------------------------------------------------------------------
 Factoring integers with the self-initializing quadratic sieve (Scott Patrick
 Contini, 1997) [master's thesis]
@@ -168,10 +520,81 @@ Contini, 1997) [master's thesis]
 Great introduction to the self-initializing variant of QS, including pseudo-
 code and implementation and parameter tips. Also, comparisons of MPSQ and SIQS
 to show that SIQS is at least twice as fast.
+-------------------------------------------------------------------------------
+Implementing the hypercube quadratic sieve with two large primes (Carrier,
+Wagstaff, 2001)
+
+Hypercube quadratic sieve is the same as SIQS. Description of what the authors
+claim is the first implementation of SIQS with two large primes. First, the
+basic QS is described, along with the large prime variation, which dates back
+to CFRAC, the two large primes variation, multiple polynomials and self-
+initialization. Then follows a detailed description of the implementation, and
+some uncommon implementation tricks are mentioned, and they conclude that SIQS
+is 8-10 times faster than MPQS for integers between 110 and 120 digits.
+-------------------------------------------------------------------------------
+MPQS with three large primes (Leyland, A Lenstra, Dodson, Muffett, Wagstaff,
+2002)
+
+Report on the factorization of a 135-digit integer using MPQS with three large
+primes, and a performance comparison between MPQS with two large primes and
+three large primes, where it is concluded that the three large prime variant
+is more than 1.5 times faster for 135 digits. Unfortunately, there are pretty
+much no details on how to expand the cycle finding method from two to three
+primes, just claiming it is a "relative straightforward adaption".
+-------------------------------------------------------------------------------
+The quadratic sieve - introduction to theory with regard to implementation
+issues (Marian Kechlibar, 2005)
+
+Description of QS that describes the multiple polynomial variant right off the
+bat. The double prime variant is described, including details on graph
+construction and cycle detection and how to actually find the two prime factors
+from the remainder after dividing out the factor base primes. There is a
+chapter describing implementation considerations in great detail, including
+SIQS details and the linear algebra step. There is a very detailed chapter with
+experimental results showing the effect of parameter tuning.
+-------------------------------------------------------------------------------
+On the quadratic sieve (Stephani Lee Garrett, 2008) [master's thesis]
+
+Description of Fermat's method and Kraitchik's variant (using congruences),
+followed by a description of QS. This description begins with a separate
+description of smooth numbers and sieving in general. Then follows a
+description of the basic variant of the quadratic sieve with a complete
+example of a factorization. Some improvements are mentioned: parallelizing the
+sieve stage, multiple polynomials and Zhang's special quadratic sieve. Finally,
+there is a brief and high-level description of NFS.
+-------------------------------------------------------------------------------
+Integer factorization using the quadratic sieve (Chad Seiberg, 2011)
+
+A description of QS which starts with Fermat's square method and then
+introduces congruences and attempting to find a square from the product of
+multiple congruences, and finally the basic variant of QS is described.
+Constructing the factor base requires finding all prime numbers below a given
+limit. Pseudocode for the sieve of Eratosthenes is given for this task. 
+Pseudocode for checking if an integer is smooth (IsSmooth) is also given, but
+it contains an error (replace N<-N mod i with N<-N/i); the same error is in the
+routine FactorOut. There's also pseudocode for the QS algorithm itself. An
+implementation of this algorithm was tested on integers with 20 to 40 digits.
+In addition, QS and NFS was tested against each other using the existing free
+program msieve, where it was found that the crossover point was at around
+101-102 digits. The article seems to be unfinished, at one place "INSERT HERE"
+appears instead of an equation, and there's the errors in the algorithms
+pointed out above.
 
 
 ===============================================================================
 QS-sieve
+-------------------------------------------------------------------------------
+A polynomial-time algorithm to find the shortest cycle basis of a graph (J D
+Horton, 1987)
+
+In the double large primes variant, one can create a graph where the large
+primes are vertices and for each partial-partial relation, create an edge
+between the two primes involved (the vertex corresponding to 1 occurs for
+partials). A cycle in this graph can be considered a relation where the large
+primes have even exponents. This article describes a polynomial-time algorithm
+that finds the shortest cycle basis in an undirected graph. A faster algorithm
+for finding a suboptimal cycle basis is also given. Pseudocode is given for
+both algorithms.
 -------------------------------------------------------------------------------
 Block sieving algorithms (Wambach, Wettig, 1995)
 
@@ -217,6 +640,40 @@ integers. The magic words in the article title refers to the decrypted message.
 ===============================================================================
 SNFS (Special number field sieve)
 -------------------------------------------------------------------------------
+Factoring with cubic integers (J M Pollard, 1988) [from the book "The
+development of the number field sieve"]
+
+Description of a method that can factor integers of the form x^3+k, where only
+k=2 have been used. The method is demonstrated on the number 2^128+1 (rewritten
+as 2F_7=x^3+1 with x=2^43). The ring of integers Z[cube root of 2] is used,
+and pairs (a,b) are found such that the rational integer a+bx is smooth and
+the algebraic integer a+bz is smooth where z^3=-k. The last steps are similar
+to QS, use linear algebra to find a congruence of squares and then take square
+roots and gcd. First, smooth a+bx are found using a sieve, then the norm is
+factored to check if it's also a smooth algebraic integer.
+-------------------------------------------------------------------------------
+The number field sieve (A Lenstra, H Lenstra, Manasse, Pollard, 1991) [from the
+book "The development of the number field sieve"]
+
+An improvement of Pollard's cubic number field factorization algorithm which
+can factor integers of the form r^e-s where r and s are small, now commonly
+known as the SNFS (special number field sieve). The algorithm is described in
+great detail, and many implementation tips are given. At the end there is a
+section describing how to generalize the algorithm to any integer. The
+described algorithm is problematic for even number fields, as the choice is
+between a linear algebra step over Z or an extremely expensive algebraic
+square root step.
+-------------------------------------------------------------------------------
+Factorization of the numbers of the form m^3 + c_2m^2 + c_1m + c_0 (Zhang
+Mingzhi, 1998) [part of book Algorithmic number theory, 1998]
+
+Description of an algorithm that is efficient at factoring integers of the
+form stated in the title, where the coefficients are "small". The algorithm is
+described as a combination of ideas from both QS and NFS, and it's expected to
+be faster than MPQS for sufficiently large integers. This article is purely
+mathematical. The article is sorted under SNFS because it looks like the most
+similar algorithm.
+-------------------------------------------------------------------------------
 Optimal parameterization of SNFS (Robert D Silverman, 2007)
 
 A theoretical analysis that shows that a rectangular sieving region is not
@@ -230,6 +687,29 @@ SNFS algorithm. Contains numerical examples and has an outline of how to
 implement the sieve step. There is run-time analysis for both QS and SNFS.
 NFS gets a tiny mention near the end. Apart from the brief mention on how to
 implement sieving, this is a mathematical document.
+
+
+===============================================================================
+SNFS-sieve
+-------------------------------------------------------------------------------
+The lattice sieve (J M Pollard, 1991) [from the book "The development of the
+number field sieve"]
+
+Description of the lattice sieve method which only sieves pairs (a,b) such
+that a+bx=0 (mod q) for a prime q, which increases the chance that the norm is
+smooth. Includes implementation details and a comparison between classical
+sieving and lattice sieve (the latter is actually slower in the test). This
+method also applies to the NFS.
+===============================================================================
+SNFS-improvements
+-------------------------------------------------------------------------------
+Mersenne factorization factory (Kleinjung, Bos, A Lenstra, 2014) [paper in
+progress]
+
+Coppersmith's "factorization factory" (using the same polynomials for the
+factorization of multiple integers, and re-using the entire sieve) was adapted
+to the SNFS and used to factor 17 mersenne numbers, most of them larger than
+the previous record factorizatoins.
 
 
 ===============================================================================
@@ -250,10 +730,42 @@ Lenstra, Osvik, 2007)
 
 Description of how 2^1039-1 was factored. Also includes a description of the
 Block Wiedemann algorithm for the matrix step.
+-------------------------------------------------------------------------------
+Factorization of a 1061-bit number by the special number field sieve (Greg
+Childers, 2012)
+
+Report on the factorization of 2^1061-1, and description and details of the
+approach are given. The factorization was performed using free and publicly
+available software, and the sieving was done using the BOINC framework where
+volunteers can participate via the internet.
 
 
 ===============================================================================
 NFS ([General] number field sieve)
+-------------------------------------------------------------------------------
+Factoring integers with the number field sieve (Buhler, H Lenstra, Pomerance,
+1991) [from the book "The development of the number field sieve"]
+
+Description and analysis of a more general version of the SNFS which is able
+to factor arbitrary integers. The document is very thorough, detailed and math-
+intensive. The algebraic square root algorithm described seems to be the "brute
+force" algorithm that factors X^2-gamma, where gamma is the algebraic square,
+which dominates the runtime of the NFS because of the sheer size of the
+numbers. The existence of Couveignes' much more efficient odd degree algorithm
+is mentioned.
+-------------------------------------------------------------------------------
+A general number field sieve implementation (Bernstein, A Lenstra, 1991) [from
+the book "The development of the number field sieve"]
+
+Description of an implementation of NFS. Improvements used are "projective
+polynomials", lattice sieve, large prime variation, quadratic characters and
+Couveignes' odd degree square root algorithm. Standard Gaussian elimination
+was used in the matrix step, and it's mentioned as a potential bottleneck
+for larger factorizations. There is a discussion about polynomial selection and
+why it is crucial for the performance. Most of the steps of the algorithm are
+described on a high level, including the lattice sieve; the polynomial
+selection is described in greater detail. Strangely enough, the results given
+seem to only include numbers of the special form, with SNFS-like polynomials.
 -------------------------------------------------------------------------------
 An implementation of the general number field sieve (Buchmann, Loho, Zayer,
 1993)
@@ -297,6 +809,12 @@ details and proofs. Some knowledge about rings is beneficial for a better
 understanding. Explains all steps of NFS except the algebraic square root,
 and gives helpful implementation details. Contains a small example.
 -------------------------------------------------------------------------------
+The number field sieve (Steven Byrnes, 2005) [school project?]
+
+A short article containing a mathematical description of SNFS and NFS,
+including proofs (or references) to why it works, but with pretty much no focus
+on implementation.
+-------------------------------------------------------------------------------
 Implementing the general number field sieve (Brent Bejot, 2009) [independent
 study]
 
@@ -309,6 +827,32 @@ lines emanating from some center in the bottom of the sieve rectangle (the
 intersection of the rational and algebraic sieve), and diagrams demonstrating
 the phenomena. The implementation described was tested on very small numbers
 (7 digits).
+-------------------------------------------------------------------------------
+The number field sieve (Elin Margrete Trondsen, 2012) [master's thesis]
+
+First, a really simple sieve example, description of QS, a detailed run-time
+analysis and small example of a factorization, showing the steps. Then a very
+detailed mathematical background of nfs is given, which goes through the needed
+algebraic number theory, with many proofs included. This section also contains
+a description of the sieve phase, where both the classical sieve and the
+lattice sieve are described. Then, the actual NFS algorithm is described
+thoroughly, with a strong mathematical focus. All steps are described, and the
+old Hensel lifting variant of the algebraic square root is described.
+No implementation details.
+-------------------------------------------------------------------------------
+Number field sieve (Ruben Grønning Spaans, 2013) [master's thesis]
+
+A run-through of the algebraic number theory needed in order to understand NFS
+(with some examples of concepts) followed by a quite thorough description of
+the NFS, including most of the subalgorithms needed to make a complete
+implementation. Complete pseudocode is given, and the easiest algorithm is
+usually shown at each step. Couveiges' algebraic square root algorithm is used.
+There is a focus on implementation, and some subalgorithms that are not usually
+mentioned in other articles, are repeated here for convenience (such as finding
+roots of polynomials over finite fields, the Tonelli-Shanks algorithm for
+finding square roots in prime fields (prime power fields are sadly omitted).
+There is a lengthy example of the factorization of a 7-digit integer, showing
+all steps in detail. Warning, I am the author.
 
 
 ===============================================================================
@@ -320,6 +864,12 @@ A variant of NFS with quadratic polynomials is considered, and the yield is
 calculated for full relations, partial relations and partial-partials.
 Apparently this approach can't compete with degree 5 polynomials for large
 enough integers.
+-------------------------------------------------------------------------------
+Modelling the yield of number field sieve polynomials (Brian Murphy, 1998)
+[part of book "Algorithmic number theory", 1998]
+
+Examination of the yield of quadratic polynomials for NFS, and a model for
+predicting the yield is presented.
 -------------------------------------------------------------------------------
 Polynomial selection for the number field sieve integer factorisation
 algorithm (Brian Antony Murphy, 1999) [phd thesis]
@@ -333,6 +883,15 @@ On polynomial selection for the general number field sieve (Kleinjung, 2006)
 
 An improvement to the polynomial selection algorithm by Montgomery and Murphy.
 A step-by-step description of the algorithm is given.
+-------------------------------------------------------------------------------
+Better polynomials for GNFS (Bai, Bouvier, Kruppa, Zimmermann, 2014)
+
+Existing methods for selection polynomials are described, including the current
+state-of-the-art which appears to not be published elsewhere. A new improved
+method is described, and it is demonstrated that the new method produces
+polynomials with lower norm, better "Murphy's E-score" (and therefore higher
+yield) than previous methods, and the polynomials used in some previous
+factorizations.
 
 
 ===============================================================================
@@ -436,10 +995,24 @@ Strategies in filtering in the number field sieve (Stefania Cavallar, 2000)
 
 Description of various methods used to remove and merge relations from the
 matrix before running linear algebra.
+-------------------------------------------------------------------------------
+Improvement in the filtering step of integer factorization algorithms (Cyril
+Bouvier, 2012)
 
-
+TODO
 ===============================================================================
 NFS-algebraic square root
+-------------------------------------------------------------------------------
+Computing a square root for the number field sieve (Jean-Marc Couveignes, 1991)
+[from the book "The development of the number field sieve"]
+
+Description of an efficient algorithm for finding the square root of an
+algebraic number. It avoids large numbers by doing computations modulo many
+primes and by using the Chinese remainder theorem to obtain the final answer.
+The algorithm requires a number field of odd degree, because the sign of the
+norm determines which modular square root to pick for each modulo. Rather
+difficult and math-heavy (as can be expected for this step), but this is one of
+the more overcomable algorithms to implement for this step.
 -------------------------------------------------------------------------------
 Square roots of products of algebraic numbers (Peter L Montgomery, 1993)
 
@@ -468,8 +1041,9 @@ asymptotic runtime of the number field sieve is improved from L[1/3,1.923] to
 L[1/3,1.902]. Another improvement is suggested which involve choosing an m
 (independently of the number N to be factored) and precalculate the entire
 sieve a-mb for some a,b bounds and factor base limit, leading to an asymptotic
-runtime of L[1/3,1.639]. Other authors have doubted that these improvements are
-useful in practice for the range of N that we can hope to factor.
+runtime of L[1/3,1.639], the "factorization factory" approach. Initially other
+authors doubted the practical usefulness of these improvements, but the latter
+idea was later used to factor a bunch of Mersenne numbers at once using SNFS.
 -------------------------------------------------------------------------------
 A multiple polynomial general number field sieze (Marije Elkenbracht-Huizing,
 1996)
@@ -526,6 +1100,15 @@ LINEAR ALGEBRA
 Solve a system of linear equations modulo 2 aka find subset of relations such
 that their product is a square.
 -------------------------------------------------------------------------------
+Discrete logarithms in finite fields and their cryptographic significance
+(Odlyzko, 1985) [phd thesis]
+
+The main topic is discrete logarithms, but the subsection "sparse matrix
+techniques" describes various ways to deal with the linear algebra step more
+efficiently. The ways described are conjugate gradient and how to adapt it to
+F_2 (including a way to avoid explicitly storing A=B^TB), the Wiedemann
+algorithm and something that looks like structured Gaussian elimination.
+-------------------------------------------------------------------------------
 Solving sparse linear equations over finite fields (Douglas H Wiedemann, 1986)
 
 An original algorithm for solving systems over finite fields.  Rather difficult
@@ -575,6 +1158,12 @@ Kaltofen, 1996) [extended abstract]
 A short "survey" on different iterative linear equation solvers that mentions
 Block Wiedemann and Block Lanczos.
 -------------------------------------------------------------------------------
+Analysis of Coppersmith's Block Wiedemann algorithm for the parallel solution
+of sparse linear systems (Erich Kaltofen, 1995)
+
+Very theoretical and math-intensive analysis of a parallel version of the
+Coppersmith's modification to the Block Wiedemann algorithm.
+-------------------------------------------------------------------------------
 Parallel Block Lanczos for solving large binary systems (Michael Peterson,
 2006) [master's thesis]
 
@@ -594,6 +1183,99 @@ http://rjlipton.wordpress.com/2012/08/09/a-new-way-to-solve-linear-equations/
 
 
 ===============================================================================
+OTHER FACTORIZATION ALGORITHMS
+-------------------------------------------------------------------------------
+Factoring large integers (R Sherman Lehman, 1974)
+
+An algorithm which is an improvement to Fermat's square method which reduces
+the runtime from O(n^1/2) to O(n^1/3). Examples of some factorizations are
+given, and complete pseudocode (which strongly resembles Pascal) is given.
+-------------------------------------------------------------------------------
+Asymptotically fast factorization of integers (John D Dixon, 1981)
+
+Description of a probabilistic algorithm for factoring a composite integer. It
+is claimed that this is the first subexponential factorization algorithm that
+is not based on unproven, heuristic, plausible assumptions. This is the now
+classical "Dixon's random squares method".
+-------------------------------------------------------------------------------
+A Monte Carlo factoring algorithm with linear storage (Schnorr, H Lenstra,
+1984)
+
+A probabilistic algorithm that will factor an integer efficiently if the class
+number has no large prime factors. I wasn't previously familiar with this
+algorithm, but it looks slightly similar to ECM/P-1/P+1, but instead using the
+class group of some discriminant. The method is sometimes referred to as the
+"class group method", I think.
+-------------------------------------------------------------------------------
+A probabilistic factorization algorithm with quadratic forms of negative
+discriminant (Martin Seysen, 1987)
+
+A probabilistic algorithm with a non-heuristic runtime of L[1/2,sqrt(5/4)]
+(assuming the extended Riemann hypothesis), based on quadratic forms of
+negative discriminant. The author admits that the algorithm is not designed for
+implementation. The description is math- and proof-heavy and contains no
+implementation details, as expected.
+-------------------------------------------------------------------------------
+Fast, rigorous factorization and discrete logartihm algorithms (Carl Pomerance,
+1987)
+
+A factorization algorithm with runtime L[1/2,sqrt(2)] is described and the
+runtime is proved rigorously without heuristic assumptions. The algorithm is
+a variant of Dixon's random squares with ECM as a subroutine, and with
+Wiedemann's coordinate recurrence method for the matrix step. A rigorous
+algorithm for discrete logarithm is also presented. The article is a
+theoretical one with no focus on implementation.
+-------------------------------------------------------------------------------
+A rigorous time bound for factoring integers (H Lenstra, Pomerance, 1992)
+
+A proof that there exists a randomized factoring algorithm with expected (not
+heuristic) runtime of L[1/2,1+o(1)]. The proof is based on class groups of
+binary quadratic forms. The article is extremely math-heavy. Since the purpose
+is to prove stuff, there are no implementation tips for anything. An algorithm
+that has a runtime according to the proof is given, which is described in a
+rather math-heavy way.
+-------------------------------------------------------------------------------
+The art of computer programming, pre-pre-fascicle 6a (7.2.2.2 satisfiability)
+(Donald Knuth, 2014)
+
+Section-in-progress of a TAOCP volume 4B, a book in progress. A comprehensive
+section on satisfiability; that is, find an assignment of boolean variables
+that satisfy a given formula given in "conjunctive form". Several algorithms
+are given. A number of examples of problems that can be solved with
+satisfiability algorithms are shown. Interestingly, one of them is integer
+factorization. An z-bit integer which is a product of m-bit and n-bit integers
+can be formulated as a binary multiplication, can again be formulated as a
+conjunctive boolean formula that can in turn be fed to a SAT-solver. Given a
+z-bit integer, one possible sequence of steps is to try all m,n>=1 such that
+m+n=z or m+n-1=z and try a SAT-solver. An m-bit by n-bit factorization can be
+represented as a satisfiability problem with fewer than 6mn variables, and
+fewer than 20mn clauses of length 3 or less. It is claimed (without analysis)
+that this method cannot compete with the more sophisticated factorization
+algorithms. To illustrate, a 200-digit integer which is the product of two
+100-digit integers can be represented with fewer than 60000 variables and
+fewer than 200000 clauses.
+
+
+===============================================================================
+FACTORIZATION HARDWARE
+-------------------------------------------------------------------------------
+A high performance factoring machine (Rudd, Buell, Chiarulli, 1984)
+
+Description of a proposed cheap machine with wide ALU that is able to do high-
+speed arithmetic on very long integers, and which is able to do factorization
+an order of magnitude faster than commercially available machines.
+
+
+-------------------------------------------------------------------------------
+A pipeline architecture for factoring integers with the quadratic sieve
+algorithm (Pomerance, Smith, Tuler, 1988)
+
+A special purpose hardware is suggested that will factor integers using the
+quadratic sieve more efficiently than conventional computers. A pretty detailed
+description of QS is included.
+
+
+===============================================================================
 QUANTUM COMPUTER ALGORITHMS
 -------------------------------------------------------------------------------
 Polynomial-time algorithms for prime factorization and discrete logarithms on a
@@ -601,4 +1283,6 @@ quantum computer (Peter W Shor, 1996)
 
 The "classical" polynomial-time algorithm for integer factoring on a quantum
 computer. Not currently practical.
+
+
 ===============================================================================

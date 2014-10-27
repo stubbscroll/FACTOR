@@ -14,10 +14,6 @@
    at 60 digits the linear algebra starts to take a significant amount of time,
    add block lanczos or block wiedemann...
 
-   code examples: (implementation of siqs)
-   http://gforge.inria.fr/projects/ecm/
-   http://codes-sources.commentcamarche.net/source/25981-self-initializing-quadratic-sieve
-   http://www.alpertron.com.ar/ECM.HTM
 */
 
 double gettime() {
@@ -171,8 +167,8 @@ int bitgauss64(int n,int m,int o) {
 	return 1+fri;
 }
 
-void QSgenfactorbase() {
-	int i;
+int QSgenfactorbase() {
+	int i,j;
 	mpz_t t;
 	mpz_init(t);
 	qs.fn=0;
@@ -194,6 +190,9 @@ void QSgenfactorbase() {
 	qs.p[qs.fn]=2; qs.lg[qs.fn]=1; qs.a[qs.fn++]=1;
 	for(i=1;i<primes && prime[i]<qs.B;i++) {
 		mpz_set_ui(t,prime[i]);
+		j=mpz_jacobi(qs.n,t);
+		/* in the exceedingly rare event that the prime divides n: return it */
+		if(!j) return prime[i];
 		if(mpz_jacobi(qs.n,t)>0) {
 			qs.p[qs.fn]=prime[i];
 			/* find square root a = n (mod p) */
@@ -204,6 +203,7 @@ void QSgenfactorbase() {
 	}
 	printf("  factor base bound %d primes %d\n",qs.B,qs.fn);
 	mpz_clear(t);
+	return 0;
 }
 
 int correct,false,sieves;
@@ -251,7 +251,9 @@ void QStrialdiv(mpz_t start,int dir) {
 				if(qs.p[mid]<k) lo=mid+1;
 				else hi=mid;
 			}
-			if(k!=qs.p[lo]) printf("sanity error, remainder %d found %d\n",k,qs.p[lo]);
+			if(k!=qs.p[lo]) {
+				printf("sanity error, remainder %d found %d\n",k,qs.p[lo]);
+			}
 			/* put factor in exponent vector */
 			if(lo<0 || lo>=qs.fn) printf("lo %d out of bounds\n",lo);
 			XORBIT(lo,qs.rn);
@@ -468,10 +470,16 @@ int QS(mpz_t n,mpz_t a) {
 	qs.LGSLACK=13;
 	if(d>=33) qs.LGSLACK+=(d-33)/7;
 	mpz_init_set(qs.n,n);
-	QSgenfactorbase();
+	if((i=QSgenfactorbase())) {
+		/* factor base prime divides n */
+		mpz_set_si(a,i);
+		r=1;
+		goto done;
+	}
 	QSsieve();
 	bitgauss64(qs.fn,qs.rn,0);
 	r=QSroot(a);
+done:
 	for(i=0;i<qs.rn;i++) mpz_clear(qs.rel[i]);
 	free(qs.p); free(qs.a); free(qs.lg); free(qs.rel);
 	for(i=0;i<qs.fn;i++) free(qs.m[i]);

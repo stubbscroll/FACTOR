@@ -1,7 +1,7 @@
 some factorization algorithms
 
 rho.c            pollard rho with brent's improvements.
-p1.c             pollard p-1 with one large prime.
+pm1.c            pollard p-1 with one large prime.
 ecm.c            basic ECM implemented from "factorization and primality
                  testing" by bressoud.
 ecm2.c           improved ECM implemented from "prime numbers - a computational
