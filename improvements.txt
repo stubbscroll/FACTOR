@@ -1,14 +1,32 @@
+algorithms to implement
+
+SQUFOF
+P+1?
+only consider NFS if I can get QS fast (~some hours) for like 120 digits
+
 improvements to consider
+
+P-1
+
+brent-suyama extension
 
 ECM
 
 alpertron's implementation has a lot of montgomery multiplication stuff in it,
 investigate
 
+brent-suyama extension
+
 QS
 
+one large prime
+
 multiply n by a small constant, to skew the factor base towards smaller primes.
-minimize the log sum of primes of something like that, check that paper again.
+minimize the log sum of factor base primes of something like that, check that
+paper again to be sure.
+
+don't sieve the smallest primes, and adjust LGSLACK to compensate. less sieving
+and slightly more trial division, i guess
 
 sieve around floor(sqrt(n)), then sieve around floor(sqrt(2n)) etc for
 increasing kn
@@ -17,18 +35,21 @@ multiple polynomials!
 
 siqs!
 
-one large prime
-
 two large primes
 
 filtering: remove duplicate relations and if a prime occurs once, remove the
 relation containing it. if a prime occurs in two relations, merge them. if a
 prime occurs in 3 relations, they can be merged into 2 relations.
 
+skim papers again and see if i missed more speedup tricks.
+
 other qs implementations:
 http://gforge.inria.fr/projects/ecm/
 http://codes-sources.commentcamarche.net/source/25981-self-initializing-quadratic-sieve
 http://www.alpertron.com.ar/ECM.HTM
+
+read
+http://mersennewiki.org/index.php/Self-Initializing_Quadratic_Sieve
 
 LINEAR ALGEBRA
 
