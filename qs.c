@@ -117,6 +117,8 @@ struct {
 	unsigned long long **m;
 	/* final assembly */
 	int *ev;                /* cumulative exponent vector */
+	/* stats */
+	int false,sieves;
 } qs;
 
 #define SETBITVAL(a,b,v) qs.m[(a)][(b)>>6]=(qs.m[(a)][(b)>>6]&~(1ULL<<((b)&63)))|((v>0)<<((b)&63))
@@ -196,8 +198,6 @@ int QSgenfactorbase() {
 	return 0;
 }
 
-int correct,false,sieves;
-
 /* dir: 1 if positive x^2-n, -1 if negative */
 void QStrialdiv(mpz_t start,int dir) {
 	mpz_t t,t1,t2;
@@ -251,12 +251,11 @@ void QStrialdiv(mpz_t start,int dir) {
 			mpz_set(qs.rel[qs.rn],start);
 			mpz_add_ui(qs.rel[qs.rn],qs.rel[qs.rn],i);
 			qs.rn++;
-			correct++;
 //			gmp_printf("add smooth %Zd %d/%d sieve-lg %d lim %d\n",t2,qs.rn,qs.fn+EXTRAREL,qs.sieve[i],lim);
 		} else {
 			/* factorization failed, clear vector */
 			for(j=0;j<qs.fn;j++) CLRBIT(j,qs.rn);
-			false++;
+			qs.false++;
 		}
 		if(qs.rn==qs.fn+EXTRAREL) break;
 	}
@@ -293,7 +292,7 @@ void QSsieve() {
 		if(pfrontm[i]<0) printf("error");
 	}
 	/* sieve! */
-	correct=false=sieves=0;
+	qs.false=qs.sieves=0;
 	printf("  ");
 	do {
 		/* forward */
@@ -331,10 +330,10 @@ void QSsieve() {
 		/* find smooth numbers (negative) */
 		if(qs.rn<qs.fn+EXTRAREL) QStrialdiv(xback,-1);
 		mpz_sub_ui(xback,xback,BLOCKSIZE);
-		sieves++;
-		if(sieves%1000000==0) printf("[%d] ",qs.rn);
+		qs.sieves++;
+		if(qs.sieves%1000000==0) printf("[%d] ",qs.rn);
 	} while(qs.rn<qs.fn+EXTRAREL);
-	printf("%d rel %d fail trial division %d sieve blocks\n",correct,false,sieves);
+	printf("%d rel %d fail trial division %d sieve blocks\n",qs.rn,qs.false,qs.sieves);
 	free(pfrontp); free(pfrontm); free(pbackp); free(pbackm);
 	mpz_clear(xfront); mpz_clear(xback); mpz_clear(t);
 }
@@ -455,7 +454,7 @@ int QS(mpz_t n,mpz_t a) {
 	if(d<=50) qs.B*=1.4;
 	else if(d>=68) qs.B*=0.9;
 	else qs.B*=1.4-((d-50)/18*0.5);
-	qs.B+=10;
+	qs.B+=100; /* needs to be high enough to work for very small integers */
 	/* the following formula of LGSLACK found by experimentation */
 	qs.LGSLACK=13;
 	if(d>=33) qs.LGSLACK+=(d-33)/7;
@@ -470,7 +469,7 @@ int QS(mpz_t n,mpz_t a) {
 	bitgauss64(qs.fn,qs.rn,0);
 	r=QSroot(a);
 done:
-	for(i=0;i<qs.rn;i++) mpz_clear(qs.rel[i]);
+	for(i=0;i<qs.fn+EXTRAREL;i++) mpz_clear(qs.rel[i]);
 	free(qs.p); free(qs.a); free(qs.lg); free(qs.rel);
 	for(i=0;i<qs.fn;i++) free(qs.m[i]);
 	free(qs.m);
@@ -495,6 +494,7 @@ done:
 	mpz_fdiv_q(a,n,a);
 	gmp_printf("(%c)\n",mpz_probab_prime_p(a,200)?'P':'C');
 fail:
+	fflush(stdout);
 	mpz_clear(n); mpz_clear(a);
 }
 

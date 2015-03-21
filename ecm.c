@@ -149,6 +149,7 @@ done:
 	mpz_fdiv_q(a,n,a);
 	gmp_printf("(%c)\n",mpz_probab_prime_p(a,200)?'P':'C');
 fail:
+	fflush(stdout);
 	mpz_clear(n); mpz_clear(a);
 }
 
